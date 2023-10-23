@@ -10,11 +10,16 @@ const fileupload=require('express-fileupload');
 router.use(fileupload({
   useTempFiles:true
 }));
-  cloudinary.config({ 
-    cloud_name: "dnbjbsbzs", 
-    api_key: "234235216497426", 
-    api_secret: "PrPzz58Dioikd8hjxi8Xla-3JLA" 
-  });
+// cloudinary.config({
+//   cloud_name: process.env.CLOUD_NAME,
+//   api_key: process.env.API_KEY,
+//   api_secret: process.env.API_SECRET
+// });
+cloudinary.config({
+  cloud_name: "dnbjbsbzs",
+  api_key: "234235216497426",
+  api_secret: "PrPzz58Dioikd8hjxi8Xla-3JLA"
+});
 
   router.post('/upload/:userId', async (req, res) => {
     try {
@@ -93,111 +98,70 @@ router.use(fileupload({
     }
   });
   
-  // router.post('/upload/:userId', async (req, res,next) => {
-  //   const userId = req.params.userId;
-  //   try {
-  //     const file=req.files.photo;
-  //     cloudinary.uploader.upload(file.tempFilePath, async(err,result)=>{
-  //       if(err) throw err;
-  //       console.log(result);
-  //     });
-
-  //     res.send("File Uploaded Successfully"); 
-
-  //   } catch (err) {
-  //     console.error(err);
-  //     res.status(500).send('Internal Server Error: ');
-
-  //   }
-  // });
-  
+// create an api to get all the blogs
+router.get('/fetchall', async (req, res) => {
+  try {
+    const allData = await userBlogData.find();
+    res.status(200).json(allData);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+});
 module.exports = router;
 
-// const multer = require('multer');
-// const fs = require('fs');
-// const path = require('path');
+//create an api to delete a blog
+router.delete('/delete/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    await userBlogData.findByIdAndDelete(id);
+    res.status(200).send('Blog deleted successfully');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 
-// Multer configuration
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'uploads');
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, file.fieldname + '-' + Date.now());
-//   },
-// });
+//create an api to update a blog
+router.put('/update/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { title, body } = req.body;
+    const file = req.files ? req.files.photo : null; // Check if req.files exists
 
-// const upload = multer({ storage: storage });
+    const updates = {}; // Create an empty object to collect updates
 
-// Routes for userBlogData
-// router.get('/getdata/:userId', async (req, res) => {
-//     try {
-//       const userId = req.params.userId; // Extract the user's _id from the URL parameter
-//       if (!userId) {
-//         return res.status(400).send('User ID is missing in the URL parameter');
-//       }
-//       console.log(userId)
-//       // Find data associated with the specified user's _id
-//       const data = await userBlogData.find({ userId: userId });
-//       if (!data || data.length === 0) {
-//         return res.status(404).send('No data found for the specified user');
-//       }
-  
-//       // Map the data to a new format based on the object you provided
-//       const formattedData = data.map(item => ({
-//         img: {
-//           data: item.img.data,
-//           contentType: item.img.contentType,
-//         },
-//         email: item.email,
-//         fullname: item.fullname,
-//         userId: userId,
-//         user: item.user,
-//         title: item.title,
-//         body: item.body,
-//       }));
-      
-  
-//       // Render the formatted data or send it as a JSON response
-//       // Here, it's sent as JSON
-//       res.json({ items: formattedData });
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).send('Internal Server Error');
-//     }
-//   });
-  
+    if (file) {
+      // Handle image upload if a file is provided
+      const result = await cloudinary.uploader.upload(file.tempFilePath);
+      const imgUrl = result.url;
+      updates.imageUrl = imgUrl;
+    }
 
-  // router.post('/upload/:userId', upload.single('image'), async (req, res) => {
-  //   const userId = req.params.userId;
-  
-  //   try {
-  //     const user = await GoogleUser.findById(userId);
-  //     if (!user) {
-  //       return res.status(404).send('User not found');
-  //     }
-  
-  //     // Define the correct file path based on your project structure
-  //     const filePath = path.join(__dirname, '../uploads', req.file.filename);
-  
-  //     const obj = {
-  //       img: {
-  //         data: fs.readFileSync(filePath), // Use the correct file path
-  //         contentType: 'image/png',
-  //       },
-  //       email: user.email,
-  //       fullname: user.fullname,
-  //       userId: userId,
-  //       title: req.body.title,
-  //       body: req.body.body,
-  //     };
-  
-  //     const item = await userBlogData.create(obj);
-  //     res.render('getData', { userId: userId });
-  //   } catch (err) {
-  //     console.error(err);
-  //     res.status(500).send('Internal Server Error: ' + error);
+    // Check if title and body are provided
+    if (title) {
+      updates.title = title;
+    }
+    if (body) {
+      updates.body = body;
+    }
 
-  //   }
-  // });
+    // Perform the update using await
+    const updatedData = await userBlogData.findByIdAndUpdate(id, updates);
+
+    if (!updatedData) {
+      return res.status(404).send('Blog not found');
+    }
+
+    console.log(updatedData);
+    if (file) {
+      res.status(200).send('Blog updated successfully with image');
+    } else {
+      res.status(200).send('Blog updated successfully');
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+});
