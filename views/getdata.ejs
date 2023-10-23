@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data</title>
+</head>
+<body>
+    <button id="fetchDataButton">Fetch Data</button>
+
+    <div id="dataContainer">
+        <!-- Data will be displayed here -->
+    </div>
+
+    <script>
+        const fetchDataButton = document.getElementById('fetchDataButton');
+        const dataContainer = document.getElementById('dataContainer');
+
+        fetchDataButton.addEventListener('click', async () => {
+            try {
+                const userId = "6525152e7c01b579fa067ec7"; // Insert the user's ID here
+                const response = await fetch(`/userBlogData/getdata/${userId}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+
+                    data.items.forEach((item) => {
+                        // Create an Image element
+                        const img = document.createElement("img");
+
+                        // Create a blob from the array buffer data
+                        const blob = new Blob([new Uint8Array(item.img.data.data)], { type: item.img.contentType });
+
+                        // Create a data URL for the image
+                        const reader = new FileReader();
+                        reader.onload = function () {
+                            img.src = reader.result;
+
+                            // Create a container for the image and text
+                            const container = document.createElement("div");
+                            container.appendChild(img);
+
+                            // Create paragraphs for the other data
+                            const email = document.createElement("p");
+                            email.textContent = `Email: ${item.email}`;
+                            const fullname = document.createElement("p");
+                            fullname.textContent = `Fullname: ${item.fullname}`;
+                            const title = document.createElement("p");
+                            title.textContent = `Title: ${item.title}`;
+                            const body = document.createElement("p");
+                            body.textContent = `Body: ${item.body}`;
+
+                            // Append all elements to the container
+                            container.appendChild(email);
+                            container.appendChild(fullname);
+                            container.appendChild(title);
+                            container.appendChild(body);
+
+                            // Append the container to the dataContainer
+                            dataContainer.appendChild(container);
+                        };
+                        reader.readAsDataURL(blob);
+                    });
+                } else {
+                    dataContainer.innerHTML = 'Error fetching data';
+                }oluou
+            } catch (error) {
+                dataContainer.innerHTML = 'An error occurred';
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
