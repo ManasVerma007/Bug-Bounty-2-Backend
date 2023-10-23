@@ -40,4 +40,10 @@ router.get("/getuserdetail/", (req, res) => {
   }
 });
 
+//create api for logout
+router.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "User logged out" });
+});
+
 module.exports = router;
