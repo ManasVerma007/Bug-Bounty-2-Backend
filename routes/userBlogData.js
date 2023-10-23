@@ -10,16 +10,16 @@ const fileupload=require('express-fileupload');
 router.use(fileupload({
   useTempFiles:true
 }));
-// cloudinary.config({
-//   cloud_name: process.env.CLOUD_NAME,
-//   api_key: process.env.API_KEY,
-//   api_secret: process.env.API_SECRET
-// });
 cloudinary.config({
-  cloud_name: "dnbjbsbzs",
-  api_key: "234235216497426",
-  api_secret: "PrPzz58Dioikd8hjxi8Xla-3JLA"
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET
 });
+// cloudinary.config({
+//   cloud_name: "dnbjbsbzs",
+//   api_key: "234235216497426",
+//   api_secret: "PrPzz58Dioikd8hjxi8Xla-3JLA"
+// });
 
   router.post('/upload/:userId', async (req, res) => {
     try {
